@@ -34,4 +34,7 @@ void log_write(const char *format, ...)
 
     // 3 销毁
     va_end(args);
+
+    // 强制写入文件
+    fflush(g_log);
 }

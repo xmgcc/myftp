@@ -7,9 +7,43 @@
 #include "log.h"
 #include "msg.h"
 
+/**
+ * @brief 把用户输入的字符串转为FTP_CMD
+ *
+ * @param buf
+ *
+ * @return 
+ */
 enum FTP_CMD get_cmd(char *buf)
 {
     return FTP_CMD_ERROR;
+}
+
+/**
+ * @brief 等待用户输入，并处理
+ */
+void handle_user_input(struct Msg *msg_send)
+{
+    char buf[32];
+    enum FTP_CMD cmd;
+
+    // 等待用户输入
+    scanf("%s", buf);
+    log_write("%s", buf);
+
+    // buf转为FTP_CMD
+    // cmd = get_cmd(buf);
+    cmd = FTP_CMD_LS;
+    log_write("cmd %d\n", cmd);
+    switch (cmd) {
+        case FTP_CMD_LS:
+            break;
+        default:
+            break;
+    }
+
+    // 初始化结构体struct Msg
+    msg_send->cmd = cmd;
 }
 
 int main(int argc, char **argv)
@@ -23,6 +57,7 @@ int main(int argc, char **argv)
     msg_recv = (struct Msg *)malloc(sizeof(struct Msg));
 
     log_create("client.txt");
+    log_write("recv \n");
 
     // 1 创建socket
     sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -42,36 +77,23 @@ int main(int argc, char **argv)
         return -1;
     }
 
+    // 成功建立tcp连接
+    log_write("connect server sucess");
+
     
     while(1) {
-        char buf[32];
-        enum FTP_CMD cmd;
-        
-        // 等待用户输入
-        scanf("%s", buf);
-        log_write("%s", buf);
 
-        // buf转为FTP_CMD
-        cmd = get_cmd(buf);
-        log_write("cmd %d", cmd);
-        switch (cmd) {
-            case FTP_CMD_LS:
-                break;
-            default:
-                break;
-        }
+        // 1. 等待用户输入
+        handle_user_input(msg_send);
 
-        // 初始化结构体struct Msg
-        msg_send->cmd = cmd;
-
-
-        // 发送
+        // 2. 发送
         ret = send(sock, msg_send, sizeof(struct Msg), 0);
-        log_write("send ret %d", ret);
+        log_write("send ret %d\n", ret);
 
-        // 接收
+        // 3. 接收
         ret = recv(sock, msg_recv, sizeof(struct Msg), 0);
-        log_write("recv ret %d", ret);
+        log_write("recv ret %d\n", ret);
+        log_write("data %s\n", msg_recv->data);
     }
 
     log_destroy();

@@ -8,5 +8,5 @@ test:
 log:
 	gcc log.c log_unittest.c -o log_unittest
 
-.PHONY:
-	client server test log
+clean:
+	rm server client linklist_unittest log_unittest *.txt

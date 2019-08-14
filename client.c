@@ -52,6 +52,48 @@ int handle_user_input(struct Msg *msg_send)
     return 0;
 }
 
+/**
+ * @brief 读取用户输入，初始化msg_send
+ *
+ * @param msg_send
+ *
+ * @return  0成功，-1失败
+ */
+int handle_user_input2(struct Msg *msg_send)
+{
+    char buf[32];
+    enum FTP_CMD cmd;
+
+    // 读取命令
+    fgets(buf, 32, stdin);
+
+    // 从键盘读取的数据，全部写入日志
+    // 打印调试信息
+    log_write("%s", buf);
+
+
+    // 检测这是什么命令？
+    // 不支持其他命令，只支持ls命令
+    // 识别到ls命令
+    if (0 == memcmp(buf, "ls", 2)) {
+        cmd = FTP_CMD_LS;
+    } else {
+        cmd = FTP_CMD_ERROR;
+    }
+
+    // 命令不支持，返回失败
+    if (cmd == FTP_CMD_ERROR) {
+        return -1;
+    }
+
+    // 初始化msg_send
+    msg_send->cmd = cmd;
+    strcpy(msg_send->args, buf);
+
+    // 返回成功
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     int ret;
@@ -89,8 +131,8 @@ int main(int argc, char **argv)
     
     while(1) {
 
-        // 1. 等待用户输入
-        if (handle_user_input(msg_send) < 0) {
+        // 1. 等待用户输入, 初始化msg_send
+        if (handle_user_input2(msg_send) < 0) {
             continue;
         }
 

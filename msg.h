@@ -23,7 +23,7 @@ struct Msg {
     // 命令
     enum FTP_CMD cmd;
 
-    // 命令参数
+    // 命令行
     char args[32];
 
     // md5校验值

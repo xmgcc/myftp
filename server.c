@@ -38,6 +38,28 @@ void handle_cmd(struct Msg *in_cmd, struct Msg *out_cmd)
     }
 }
 
+/**
+ * @brief 处理客户端的命令in_cmd，把结果写入out_cmd
+ *
+ * @param in_cmd
+ * @param out_cmd
+ */
+void handle_cmd2(struct Msg *in_cmd, struct Msg *out_cmd)
+{
+    // in_cmd 从网络读取度数据，全部写入日志，用于调试
+    log_write("cmd %d, args %s\n", in_cmd->cmd, in_cmd->args);
+
+    // 判断in_cmd的命令类型
+    if (FTP_CMD_LS == in_cmd->cmd) {
+        FILE *fp = popen(in_cmd->args, "r");
+        if (fp != NULL) {
+            int ret = fread(out_cmd->data, 1, sizeof(out_cmd->data), fp);
+            log_write("fread ret %d, %s", ret, out_cmd->data);
+            pclose(fp);
+        }
+    }
+}
+
 int main(int argc, char **argv)
 {
     struct sockaddr_in serveraddr;
@@ -97,7 +119,7 @@ int main(int argc, char **argv)
         log_write("recv %d\n", ret);
 
         // 2. handle cmd处理客户端命令
-        handle_cmd(msg_recv, msg_send);
+        handle_cmd2(msg_recv, msg_send);
 
         // 3. 发送处理结果给客户端
         ret = send(sock, msg_send, sizeof(struct Msg), 0);

@@ -19,9 +19,11 @@ void handle_cmd(struct Msg *in_cmd, struct Msg *out_cmd)
     FILE *fp = NULL;
     int ret;
 
+    out_cmd->cmd = in_cmd->cmd;
+
     switch(in_cmd->cmd) {
         case FTP_CMD_LS:
-            fp = popen("/bin/ls", "r");
+            fp = popen(in_cmd->args, "r");
             if (NULL != fp) {
                 ret = fread(out_cmd->data, 1, sizeof(out_cmd->data), fp);
                 // 一次读取5000个字节，读取一次，因为实际大小小于5000，导致EOF
@@ -89,16 +91,18 @@ int main(int argc, char **argv)
     // 成功建立TCP连接
     log_write("client connect.\n");
 
-    // 1. 接收到客户端命令
-    ret = recv(sock, msg_recv, sizeof(struct Msg), 0);
-    log_write("recv %d\n", ret);
+    while (1) {
+        // 1. 接收到客户端命令
+        ret = recv(sock, msg_recv, sizeof(struct Msg), 0);
+        log_write("recv %d\n", ret);
 
-    // 2. handle cmd处理客户端命令
-    handle_cmd(msg_recv, msg_send);
+        // 2. handle cmd处理客户端命令
+        handle_cmd(msg_recv, msg_send);
 
-    // 3. 发送处理结果给客户端
-    ret = send(sock, msg_send, sizeof(struct Msg), 0);
-    log_write("send %d\n", ret);
+        // 3. 发送处理结果给客户端
+        ret = send(sock, msg_send, sizeof(struct Msg), 0);
+        log_write("send %d\n", ret);
+    }
 
     log_destroy();
     return 0;

@@ -7,7 +7,7 @@
 #include <errno.h>
 #include "msg.h"
 #include "log.h"
-
+#include "utils.h"
 /**
  * @brief 处理客户端的命令in_cmd，并返回处理结果out_cmd
  *
@@ -49,6 +49,9 @@ void handle_cmd2(struct Msg *in_cmd, struct Msg *out_cmd)
     // in_cmd 从网络读取度数据，全部写入日志，用于调试
     log_write("cmd %d, args %s\n", in_cmd->cmd, in_cmd->args);
 
+    // 返回的命令
+    out_cmd->cmd = in_cmd->cmd;
+
     // 判断in_cmd的命令类型
     if (FTP_CMD_LS == in_cmd->cmd) {
         FILE *fp = popen(in_cmd->args, "r");
@@ -56,6 +59,26 @@ void handle_cmd2(struct Msg *in_cmd, struct Msg *out_cmd)
             int ret = fread(out_cmd->data, 1, sizeof(out_cmd->data), fp);
             log_write("fread ret %d, %s", ret, out_cmd->data);
             pclose(fp);
+        }
+    } else if (FTP_CMD_GET == in_cmd->cmd) {
+        char filename[32];
+        // 分割字符
+        if (split_string2(in_cmd->args, filename) < 0) {
+            out_cmd->cmd = FTP_CMD_ERROR;
+            log_write("filename not find\n");
+            return;
+        }
+
+        FILE *fp = fopen(filename, "r");
+        if (fp != NULL) {
+            // 一次性读取5000字节，如果文件小于5000字节，整个文件就读取结束
+            int ret = fread(out_cmd->data, 1, sizeof(out_cmd->data), fp);
+            out_cmd->data_length = ret;
+            log_write("fread ret %d, eof %d\n", ret, feof(fp));
+            fclose(fp);
+        } else {
+            out_cmd->cmd = FTP_CMD_ERROR;
+            log_write("filename not find %s\n", filename);
         }
     }
 }
@@ -119,6 +142,7 @@ int main(int argc, char **argv)
         log_write("recv %d\n", ret);
 
         // 2. handle cmd处理客户端命令
+        memset(msg_send, 0, sizeof(struct Msg));
         handle_cmd2(msg_recv, msg_send);
 
         // 3. 发送处理结果给客户端

@@ -29,6 +29,9 @@ struct Msg {
     // md5校验值
     char md5[64];
 
+    // data的实际长度
+    int data_length;
+
     // data
     char data[5000];
 };

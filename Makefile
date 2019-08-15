@@ -1,7 +1,7 @@
 client:
-	gcc client.c log.c -o client -g
+	gcc client.c log.c -o client -g utils.c
 server:
-	gcc server.c log.c -o server -g
+	gcc server.c log.c -o server -g utils.c
 test:
 	gcc linklist.c linklist_unittest.c -o linklist_unittest
 

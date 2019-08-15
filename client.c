@@ -6,6 +6,7 @@
 #include <sys/types.h> /* See NOTES */
 #include "log.h"
 #include "msg.h"
+#include "utils.h"
 
 /**
  * @brief 把用户输入的字符串转为FTP_CMD
@@ -77,6 +78,8 @@ int handle_user_input2(struct Msg *msg_send)
     // 识别到ls命令
     if (0 == memcmp(buf, "ls", 2)) {
         cmd = FTP_CMD_LS;
+    } else if (0 == memcmp(buf, "get", 3)) {
+        cmd = FTP_CMD_GET;
     } else {
         cmd = FTP_CMD_ERROR;
     }
@@ -143,10 +146,20 @@ int main(int argc, char **argv)
         // 3. 接收
         ret = recv(sock, msg_recv, sizeof(struct Msg), 0);
         log_write("recv ret %d\n", ret);
+        log_write("cmd %d\n", msg_recv->cmd);
         log_write("data %s\n", msg_recv->data);
 
         if (FTP_CMD_LS == msg_recv->cmd) {
             printf("%s", msg_recv->data);
+        } else if (FTP_CMD_GET == msg_recv->cmd) {
+            char filename[32];
+            split_string2(msg_send->args, filename);
+            FILE *fp = fopen(filename, "w");
+            if (fp != NULL) {
+                ret = fwrite(msg_recv->data, 1, msg_recv->data_length, fp);
+                log_write("fwrite ret %d", ret);
+                fclose(fp);
+            }
         }
     }
 

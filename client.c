@@ -80,6 +80,26 @@ int handle_user_input2(struct Msg *msg_send)
         cmd = FTP_CMD_LS;
     } else if (0 == memcmp(buf, "get", 3)) {
         cmd = FTP_CMD_GET;
+    } else if (0 == memcmp(buf, "put", 3)) {
+        cmd = FTP_CMD_PUT;
+        // 解析命令，获取文件名
+        char filename[32];
+        if (split_string2(buf, filename) < 0) {
+            log_write("filename not find");
+            return -1;
+        }
+        // 把文件内容写入data
+        // #define NULL 0
+        FILE *fp = fopen(filename, "r");
+        if (NULL != fp) {
+            // 设置data_length
+            msg_send->data_length = fread(msg_send->data, 1, sizeof(msg_send->data), fp);
+            log_write("fread %d", msg_send->data_length);
+            fclose(fp);
+        } else {
+            log_write("filename not find, %s", filename);
+            return -1;
+        }
     } else {
         cmd = FTP_CMD_ERROR;
     }
@@ -152,8 +172,12 @@ int main(int argc, char **argv)
         if (FTP_CMD_LS == msg_recv->cmd) {
             printf("%s", msg_recv->data);
         } else if (FTP_CMD_GET == msg_recv->cmd) {
+            // get file.txt
+            // file.txt
+            // _file.txt
             char filename[32];
-            split_string2(msg_send->args, filename);
+            filename[0] = '_';
+            split_string2(msg_send->args, &filename[1]);
             FILE *fp = fopen(filename, "w");
             if (fp != NULL) {
                 ret = fwrite(msg_recv->data, 1, msg_recv->data_length, fp);

@@ -80,6 +80,19 @@ void handle_cmd2(struct Msg *in_cmd, struct Msg *out_cmd)
             out_cmd->cmd = FTP_CMD_ERROR;
             log_write("filename not find %s\n", filename);
         }
+    } else if (FTP_CMD_PUT == in_cmd->cmd) {
+        // 获取文件名,以+开头
+        char filename[32];
+        filename[0] = '+';
+        split_string2(in_cmd->args, &filename[1]);
+        // 把文件内容写入文件
+        FILE *fp = fopen(filename, "w");
+        if (fp != NULL) {
+            int ret = fwrite(in_cmd->data, 1, in_cmd->data_length, fp);
+            log_write("fwrite ret %d, filename %s, data_length %d",
+                      ret, filename, in_cmd->data_length);
+            fclose(fp);
+        }
     }
 }
 

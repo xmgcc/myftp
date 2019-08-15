@@ -39,7 +39,7 @@ int split_string2(char *in_str, char *out_str)
     return 0;
 }
 
-int split_string2(char *in_str, char *out_str)
+int split_string(char *in_str, char *out_str)
 {
     char *first;
     char *_n;

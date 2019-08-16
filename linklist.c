@@ -23,8 +23,8 @@ void linklist_printf(struct LinkList *head)
     struct LinkList *p = head;
 
     while (p != NULL) {
-        p = p->next;
         printf("%s\n", p->cmd);
+        p = p->next;
     }
 }
 

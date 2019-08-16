@@ -49,11 +49,17 @@ void handle_cmd(struct Msg *in_cmd, struct Msg *out_cmd)
  */
 void handle_cmd2(struct Msg *in_cmd, struct Msg *out_cmd)
 {
+    // 局部静态变量，他的值一直存在
+    static struct LinkList *hist = NULL;
+
     // in_cmd 从网络读取度数据，全部写入日志，用于调试
     log_write("cmd %d, args %s\n", in_cmd->cmd, in_cmd->args);
 
     // 返回的命令
     out_cmd->cmd = in_cmd->cmd;
+
+    // 保存命令
+    linklist_insert(&hist, in_cmd->args);
 
     // 判断in_cmd的命令类型
     if (FTP_CMD_LS == in_cmd->cmd) {
@@ -63,6 +69,8 @@ void handle_cmd2(struct Msg *in_cmd, struct Msg *out_cmd)
             log_write("fread ret %d, %s", ret, out_cmd->data);
             pclose(fp);
         }
+    } else if (FTP_CMD_HIST == in_cmd->cmd) {
+        linklist_get_cmd(hist, out_cmd->data);
     } else if (FTP_CMD_CD == in_cmd->cmd) {
         char dirname[32];
 

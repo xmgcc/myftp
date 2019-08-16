@@ -18,6 +18,9 @@ enum FTP_CMD {
     // 验证用户名密码
     FTP_CMD_AUTH = 5,
 
+    // 历史纪律
+    FTP_CMD_HIST= 6,
+
     // 无效的命令
     FTP_CMD_ERROR,
 };

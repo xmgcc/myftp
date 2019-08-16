@@ -78,6 +78,8 @@ int handle_user_input2(struct Msg *msg_send)
     // 识别到ls命令
     if (0 == memcmp(buf, "ls", 2)) {
         cmd = FTP_CMD_LS;
+    } else if (0 == memcmp(buf, "hist", 4)) {
+        cmd = FTP_CMD_HIST;
     } else if (0 == memcmp(buf, "cd", 2)) {
         cmd = FTP_CMD_CD;
     } else if (0 == memcmp(buf, "get", 3)) {
@@ -203,7 +205,8 @@ int main(int argc, char **argv)
         log_write("cmd %d\n", msg_recv->cmd);
         log_write("data %s\n", msg_recv->data);
 
-        if (FTP_CMD_LS == msg_recv->cmd) {
+        // 如果是历史记录或LS
+        if (FTP_CMD_HIST == msg_recv->cmd || FTP_CMD_LS == msg_recv->cmd) {
             printf("%s", msg_recv->data);
         } else if (FTP_CMD_GET == msg_recv->cmd) {
             // get file.txt

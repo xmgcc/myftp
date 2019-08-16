@@ -80,6 +80,8 @@ int handle_user_input2(struct Msg *msg_send)
         cmd = FTP_CMD_LS;
     } else if (0 == memcmp(buf, "get", 3)) {
         cmd = FTP_CMD_GET;
+    } else if (0 == memcmp(buf, "quit", 4)) {
+        cmd = FTP_CMD_QUIT;
     } else if (0 == memcmp(buf, "put", 3)) {
         cmd = FTP_CMD_PUT;
         // 解析命令，获取文件名
@@ -192,7 +194,11 @@ int main(int argc, char **argv)
                 log_write("fwrite ret %d", ret);
                 fclose(fp);
             }
+        } else if (FTP_CMD_QUIT == msg_recv->cmd) {
+            printf("byebye\n");
+            break;
         }
+
     }
 
     log_destroy();

@@ -8,6 +8,9 @@
 #include "msg.h"
 #include "log.h"
 #include "utils.h"
+
+int g_running;
+
 /**
  * @brief 处理客户端的命令in_cmd，并返回处理结果out_cmd
  *
@@ -60,6 +63,9 @@ void handle_cmd2(struct Msg *in_cmd, struct Msg *out_cmd)
             log_write("fread ret %d, %s", ret, out_cmd->data);
             pclose(fp);
         }
+    } else if (FTP_CMD_QUIT == in_cmd->cmd) {
+        log_write("quit\n");
+        g_running = 0;
     } else if (FTP_CMD_GET == in_cmd->cmd) {
         char filename[32];
         // 分割字符
@@ -155,7 +161,10 @@ int main(int argc, char **argv)
     // 成功建立TCP连接
     log_write("client connect.\n");
 
-    while (1) {
+    // 服务端运行
+    g_running = 1;
+
+    while (g_running) {
         // 1. 接收到客户端命令
         ret = recv(sock, msg_recv, sizeof(struct Msg), 0);
         log_write("recv %d\n", ret);

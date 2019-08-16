@@ -165,7 +165,27 @@ int main(int argc, char **argv)
     // 成功建立tcp连接
     log_write("connect server sucess\n");
 
-    
+    struct Auth auth;
+
+    // 输入用户名密码
+    printf("username:");
+    scanf("%s", auth.username);
+    printf("password:");
+    scanf("%s", auth.password);
+    auth.cmd = FTP_CMD_AUTH;
+
+    // 发送给服务端验证
+    ret = send(sock, &auth, sizeof(struct Auth), 0);
+    log_write("send ret %d", ret);
+
+    // 判断用户名密码是否正确
+    ret = recv(sock, &auth, sizeof(struct Auth), 0);
+    if (FTP_CMD_ERROR == auth.cmd) {
+        printf("username or password error\n");
+        return -1;
+    }
+    printf("well done\n");
+
     while(1) {
 
         // 1. 等待用户输入, 初始化msg_send

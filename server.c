@@ -184,6 +184,36 @@ int main(int argc, char **argv)
     // 成功建立TCP连接
     log_write("client connect.\n");
 
+    // 读取用户名密码
+    struct Auth auth;
+    ret = recv(sock, &auth, sizeof(struct Auth), 0);
+    log_write("%s %s\n", auth.username, auth.password);
+
+    // 获取本地用户名密码
+    struct Auth server;
+    FILE *fp = fopen("passwd", "r");
+    if (fp != NULL) {
+        fscanf(fp, "%s %s", server.username, server.password);
+        log_write("server %s %s\n", server.username, server.password);
+        fclose(fp);
+    }
+ 
+    // 校验用户名密码
+    if (0 != memcmp(auth.username, server.username, strlen(server.username)) ||
+        0 != memcmp(auth.password, server.password, strlen(server.password))) {
+        // 不一样
+        auth.cmd = FTP_CMD_ERROR;
+        log_write("auth failed\n");
+    }
+
+    // 发送检验结果
+    ret = send(sock, &auth, sizeof(struct Auth), 0);
+    log_write("send %d\n", ret);
+
+    if (FTP_CMD_ERROR == auth.cmd) {
+        return -1;
+    }
+
     // 服务端运行
     g_running = 1;
 

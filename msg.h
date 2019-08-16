@@ -15,8 +15,20 @@ enum FTP_CMD {
     // cd 切换服务端目录
     FTP_CMD_CD = 4,
 
+    // 验证用户名密码
+    FTP_CMD_AUTH = 5,
+
     // 无效的命令
     FTP_CMD_ERROR,
+};
+
+struct Auth {
+    enum FTP_CMD cmd;
+
+    // 用户名
+    char username[32];
+    // 密码
+    char password[32];
 };
 
 struct Msg {

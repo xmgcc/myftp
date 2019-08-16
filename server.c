@@ -69,10 +69,16 @@ void handle_cmd2(struct Msg *in_cmd, struct Msg *out_cmd)
             return;
         }
 
+        long length = get_length(filename);
+        if (length < 0 || length > sizeof(out_cmd->data)) {
+            out_cmd->cmd = FTP_CMD_ERROR;
+            log_write("get_length failed, filename %s\n", filename);
+            return;
+        }
+
         FILE *fp = fopen(filename, "r");
         if (fp != NULL) {
-            // 一次性读取5000字节，如果文件小于5000字节，整个文件就读取结束
-            int ret = fread(out_cmd->data, 1, sizeof(out_cmd->data), fp);
+            int ret = fread(out_cmd->data, 1, length, fp);
             out_cmd->data_length = ret;
             log_write("fread ret %d, eof %d\n", ret, feof(fp));
             fclose(fp);

@@ -9,4 +9,4 @@ log:
 	gcc log.c log_unittest.c -o log_unittest
 
 clean:
-	rm server client linklist_unittest log_unittest *.txt
+	rm server client linklist_unittest log_unittest *.txt -rf

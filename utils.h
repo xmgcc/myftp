@@ -14,4 +14,13 @@
 // get file1 file2, 不支持
 int split_string2(char *in_str, char *out_str);
 
+/**
+ * @brief 获取文件的实际长度
+ *
+ * @param filename 文件名
+ *
+ * @return >=0成功，-1失败
+ */
+long get_length(char *filename);
+
 #endif // UTILS_H

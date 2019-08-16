@@ -1,5 +1,6 @@
 #include "utils.h"
 #include <string.h>
+#include <stdio.h>
 
 // get file
 // get  file
@@ -62,3 +63,26 @@ int split_string(char *in_str, char *out_str)
 
     return 0;
 }
+
+long get_length(char *filename)
+{
+    // 打开文件
+    FILE *fp = fopen(filename, "r");
+    if (fp != NULL) {
+        // 移动到文件末尾
+        if (fseek(fp, 0, SEEK_END) < 0) {
+            log_write("fseek failed");
+            return -1;
+        }
+        // 获取文件长度
+        long length = ftell(fp);
+
+        // 关闭文件
+        fclose(fp);
+
+        return length;
+    }
+
+    return -1;
+}
+

@@ -88,12 +88,20 @@ int handle_user_input2(struct Msg *msg_send)
             log_write("filename not find");
             return -1;
         }
+
+        long length = get_length(filename);
+        // 文件长度为-1或者超过最大值
+        if (length < 0 || length > sizeof(msg_send->data)) {
+            log_write("get_length failed, length %d\n", length);
+            return -1;
+        }
+
         // 把文件内容写入data
         // #define NULL 0
         FILE *fp = fopen(filename, "r");
         if (NULL != fp) {
             // 设置data_length
-            msg_send->data_length = fread(msg_send->data, 1, sizeof(msg_send->data), fp);
+            msg_send->data_length = fread(msg_send->data, 1, length, fp);
             log_write("fread %d", msg_send->data_length);
             fclose(fp);
         } else {

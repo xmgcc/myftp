@@ -78,6 +78,8 @@ int handle_user_input2(struct Msg *msg_send)
     // 识别到ls命令
     if (0 == memcmp(buf, "ls", 2)) {
         cmd = FTP_CMD_LS;
+    } else if (0 == memcmp(buf, "cd", 2)) {
+        cmd = FTP_CMD_CD;
     } else if (0 == memcmp(buf, "get", 3)) {
         cmd = FTP_CMD_GET;
     } else if (0 == memcmp(buf, "quit", 4)) {

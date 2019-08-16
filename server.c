@@ -63,6 +63,17 @@ void handle_cmd2(struct Msg *in_cmd, struct Msg *out_cmd)
             log_write("fread ret %d, %s", ret, out_cmd->data);
             pclose(fp);
         }
+    } else if (FTP_CMD_CD == in_cmd->cmd) {
+        char dirname[32];
+
+        // 获取文件夹名字
+        if (split_string2(in_cmd->args, dirname) < 0) {
+            return;
+        }
+
+        // 切换目录
+        int ret = chdir(dirname);
+        log_write("chdir ret %d", ret);
     } else if (FTP_CMD_QUIT == in_cmd->cmd) {
         log_write("quit\n");
         g_running = 0;

@@ -93,6 +93,8 @@ void handle_cmd2(struct Msg *in_cmd, struct Msg *out_cmd)
             return;
         }
 
+        get_md5(filename, out_cmd->md5);
+
         FILE *fp = fopen(filename, "r");
         if (fp != NULL) {
             int ret = fread(out_cmd->data, 1, length, fp);
@@ -108,13 +110,23 @@ void handle_cmd2(struct Msg *in_cmd, struct Msg *out_cmd)
         char filename[32];
         filename[0] = '+';
         split_string2(in_cmd->args, &filename[1]);
+
         // 把文件内容写入文件
         FILE *fp = fopen(filename, "w");
         if (fp != NULL) {
             int ret = fwrite(in_cmd->data, 1, in_cmd->data_length, fp);
-            log_write("fwrite ret %d, filename %s, data_length %d",
+            log_write("fwrite ret %d, filename %s, data_length %d\n",
                       ret, filename, in_cmd->data_length);
             fclose(fp);
+        }
+
+        // 对比客户端的md5
+        char md5[64];
+        get_md5(filename, md5);
+        if (memcmp(md5, in_cmd->md5, 32) != 0) {
+            // md5不一样，删掉服务端的文件
+            remove(filename);
+            log_write("client %s, server %s\n", in_cmd->md5, md5);
         }
     }
 }

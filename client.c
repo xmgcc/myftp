@@ -100,6 +100,9 @@ int handle_user_input2(struct Msg *msg_send)
             return -1;
         }
 
+        // 获取文件md5
+        get_md5(filename, msg_send->md5);
+
         // 把文件内容写入data
         // #define NULL 0
         FILE *fp = fopen(filename, "r");
@@ -140,7 +143,6 @@ int main(int argc, char **argv)
     msg_recv = (struct Msg *)malloc(sizeof(struct Msg));
 
     log_create("client.txt");
-    log_write("recv \n");
 
     // 1 创建socket
     sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -195,6 +197,14 @@ int main(int argc, char **argv)
                 ret = fwrite(msg_recv->data, 1, msg_recv->data_length, fp);
                 log_write("fwrite ret %d", ret);
                 fclose(fp);
+            }
+
+            char md5[64];
+            get_md5(filename, md5);
+            if (memcmp(md5, msg_recv->md5, 32) != 0) {
+                // md5不一样，删掉服务端的文件
+                remove(filename);
+                log_write("client %s, server %s\n", msg_recv->md5, md5);
             }
         } else if (FTP_CMD_QUIT == msg_recv->cmd) {
             printf("byebye\n");

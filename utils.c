@@ -86,3 +86,22 @@ long get_length(char *filename)
     return -1;
 }
 
+void get_md5(char *filename, char *md5sum)
+{
+    // 转换成命令 md5sum 1.txt
+    char cmd[64];
+    sprintf(cmd, "md5sum %s", filename);
+
+    // popen调用md5sum获取文件的md5
+    char md5[64];
+    FILE * fp = popen(cmd, "r");
+    if (fp != NULL) {
+        int ret = fread(md5, 1, sizeof(md5), fp);
+        log_write("fread ret %d, md5 %s\n", ret, md5);
+        pclose(fp);
+    }
+
+    // 51f7b7b7c117f4bf69f911d4d9c87051  log.h
+    // 分割md5值 51f7b7b7c117f4bf69f911d4d9c87051
+    sscanf(md5, "%s", md5sum);
+}

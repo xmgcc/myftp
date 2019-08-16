@@ -23,4 +23,12 @@ int split_string2(char *in_str, char *out_str);
  */
 long get_length(char *filename);
 
+/**
+ * @brief 获取文件的md5
+ *
+ * @param filename
+ * @param md5sum
+ */
+void get_md5(char *filename, char *md5sum);
+
 #endif // UTILS_H

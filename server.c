@@ -227,16 +227,17 @@ int main(int argc, char **argv)
 
     while (g_running) {
         // 1. 接收到客户端命令
-        ret = recv(sock, msg_recv, sizeof(struct Msg), 0);
-        log_write("recv %d\n", ret);
+        memset(msg_recv, 0, sizeof(struct Msg));
+        ret = my_recv(sock, (char *)msg_recv, sizeof(struct Msg));
+        log_write("my_recv %d\n", ret);
 
         // 2. handle cmd处理客户端命令
         memset(msg_send, 0, sizeof(struct Msg));
         handle_cmd2(msg_recv, msg_send);
 
         // 3. 发送处理结果给客户端
-        ret = send(sock, msg_send, sizeof(struct Msg), 0);
-        log_write("send %d\n", ret);
+        ret = my_send(sock, (char *)msg_send, sizeof(struct Msg));
+        log_write("my_send %d\n", ret);
     }
 
     log_destroy();

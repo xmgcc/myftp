@@ -105,3 +105,48 @@ void get_md5(char *filename, char *md5sum)
     // 分割md5值 51f7b7b7c117f4bf69f911d4d9c87051
     sscanf(md5, "%s", md5sum);
 }
+
+int my_send(int sock, char *buffer, int length)
+{
+    int total = 0;
+
+    while (total < length) {
+        int byte = send(sock, buffer + total, length - total, 0);
+        log_write("send %d\n", byte);
+        if (byte == -1) {
+            return -1;
+        }
+        
+        total += byte;
+
+        if (total == length) {
+            break;
+        }
+    }
+
+    return 0;
+}
+
+int my_recv(int sock, char *buffer, int length)
+{
+    int total = 0;
+
+    // 数据没有读完
+    while (total < length) {
+        int byte = recv(sock, buffer + total, length - total, 0);
+        log_write("recv %d\n", byte);
+        if (byte == -1) {
+            return -1;
+        }
+        
+        // 已经读了几个
+        total += byte;
+
+        if (total == length) {
+            break;
+        }
+    }
+
+    return 0;
+}
+

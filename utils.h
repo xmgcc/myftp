@@ -31,4 +31,6 @@ long get_length(char *filename);
  */
 void get_md5(char *filename, char *md5sum);
 
+int my_send(int sock, char *buffer, int length);
+int my_recv(int sock, char *buffer, int length);
 #endif // UTILS_H

@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <sys/types.h> /* See NOTES */
 #include <errno.h>
+#include <pthread.h>
 #include "msg.h"
 #include "log.h"
 #include "utils.h"
@@ -139,17 +140,76 @@ void handle_cmd2(struct Msg *in_cmd, struct Msg *out_cmd)
     }
 }
 
-int main(int argc, char **argv)
+void *process_client_connect(void *arg)
 {
-    struct sockaddr_in serveraddr;
-    int listenfd;
-    int sock;
+    int sock = *(int *)arg;
     int ret;
     struct Msg *msg_recv = NULL;
     struct Msg *msg_send = NULL;
 
     msg_recv = (struct Msg *)malloc(sizeof(struct Msg));
     msg_send = (struct Msg *)malloc(sizeof(struct Msg));
+
+    // 成功建立TCP连接
+    log_write("client connect.\n");
+
+    // 读取用户名密码
+    struct Auth auth;
+    ret = recv(sock, &auth, sizeof(struct Auth), 0);
+    log_write("%s %s\n", auth.username, auth.password);
+
+    // 获取本地用户名密码
+    struct Auth server;
+    FILE *fp = fopen("passwd", "r");
+    if (fp != NULL) {
+        fscanf(fp, "%s %s", server.username, server.password);
+        log_write("server %s %s\n", server.username, server.password);
+        fclose(fp);
+    }
+ 
+    // 校验用户名密码
+    if (0 != memcmp(auth.username, server.username, strlen(server.username)) ||
+        0 != memcmp(auth.password, server.password, strlen(server.password))) {
+        // 不一样
+        auth.cmd = FTP_CMD_ERROR;
+        log_write("auth failed\n");
+    }
+
+    // 发送检验结果
+    ret = send(sock, &auth, sizeof(struct Auth), 0);
+    log_write("send %d\n", ret);
+
+    if (FTP_CMD_ERROR == auth.cmd) {
+        return NULL;
+    }
+
+    // 服务端运行
+    g_running = 1;
+
+    while (g_running) {
+        // 1. 接收到客户端命令
+        memset(msg_recv, 0, sizeof(struct Msg));
+        ret = my_recv(sock, (char *)msg_recv, sizeof(struct Msg));
+        log_write("my_recv %d\n", ret);
+
+        // 2. handle cmd处理客户端命令
+        memset(msg_send, 0, sizeof(struct Msg));
+        handle_cmd2(msg_recv, msg_send);
+
+        // 3. 发送处理结果给客户端
+        ret = my_send(sock, (char *)msg_send, sizeof(struct Msg));
+        log_write("my_send %d\n", ret);
+    }
+
+    return NULL;
+}
+
+int main(int argc, char **argv)
+{
+    struct sockaddr_in serveraddr;
+    int listenfd;
+    int sock;
+    int ret;
 
     log_create("server.txt");
 
@@ -182,62 +242,22 @@ int main(int argc, char **argv)
         log_write("listen failed ,ret  %d\n", ret);
         return -1;
     }
-    // accept，返回已经完成3次握手的socket
-    sock = accept(listenfd, NULL, 0);
-    if (ret < 0) {
-        log_write("accept failed ,ret  %d\n", ret);
-        return -1;
-    }
 
-    // 成功建立TCP连接
-    log_write("client connect.\n");
 
-    // 读取用户名密码
-    struct Auth auth;
-    ret = recv(sock, &auth, sizeof(struct Auth), 0);
-    log_write("%s %s\n", auth.username, auth.password);
+    // 等待客户端连接
+    while(1)
+    {
+        // accept，返回已经完成3次握手的socket
+        sock = accept(listenfd, NULL, 0);
+        if (sock < 0) {
+            log_write("accept failed ,ret  %d\n", ret);
+            return -1;
+        }
 
-    // 获取本地用户名密码
-    struct Auth server;
-    FILE *fp = fopen("passwd", "r");
-    if (fp != NULL) {
-        fscanf(fp, "%s %s", server.username, server.password);
-        log_write("server %s %s\n", server.username, server.password);
-        fclose(fp);
-    }
- 
-    // 校验用户名密码
-    if (0 != memcmp(auth.username, server.username, strlen(server.username)) ||
-        0 != memcmp(auth.password, server.password, strlen(server.password))) {
-        // 不一样
-        auth.cmd = FTP_CMD_ERROR;
-        log_write("auth failed\n");
-    }
+        //////////////华丽的分割线/////////////////////
 
-    // 发送检验结果
-    ret = send(sock, &auth, sizeof(struct Auth), 0);
-    log_write("send %d\n", ret);
-
-    if (FTP_CMD_ERROR == auth.cmd) {
-        return -1;
-    }
-
-    // 服务端运行
-    g_running = 1;
-
-    while (g_running) {
-        // 1. 接收到客户端命令
-        memset(msg_recv, 0, sizeof(struct Msg));
-        ret = my_recv(sock, (char *)msg_recv, sizeof(struct Msg));
-        log_write("my_recv %d\n", ret);
-
-        // 2. handle cmd处理客户端命令
-        memset(msg_send, 0, sizeof(struct Msg));
-        handle_cmd2(msg_recv, msg_send);
-
-        // 3. 发送处理结果给客户端
-        ret = my_send(sock, (char *)msg_send, sizeof(struct Msg));
-        log_write("my_send %d\n", ret);
+        pthread_t t;
+        pthread_create(&t, NULL, process_client_connect, (void *)&sock);
     }
 
     log_destroy();

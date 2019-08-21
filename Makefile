@@ -1,7 +1,7 @@
 client:
 	gcc client.c log.c -o client -g utils.c
 server:
-	gcc server.c log.c -o server -g utils.c linklist.c
+	gcc server.c log.c -o server -g utils.c linklist.c -lpthread
 test:
 	gcc linklist.c linklist_unittest.c -o linklist_unittest -g
 

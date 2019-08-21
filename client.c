@@ -200,6 +200,7 @@ int main(int argc, char **argv)
         log_write("send ret %d\n", ret);
 
         // 3. 接收
+        memset(msg_recv, 0, sizeof(struct Msg));
         ret = recv(sock, msg_recv, sizeof(struct Msg), 0);
         log_write("recv ret %d\n", ret);
         log_write("cmd %d\n", msg_recv->cmd);
